@@ -2,6 +2,7 @@ package nmea
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -113,6 +114,21 @@ func Parse(s string) (SentenceI, error) {
 			return nil, err
 		}
 		return pgrme, nil
+	} else if sentence.Type == PrefixPUBX {
+		id, err := strconv.ParseInt(sentence.Fields[0], 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		if id == 0 {
+			pubx0 := NewPUBX0(sentence)
+			if err := pubx0.parse(); err != nil {
+				return nil, err
+			}
+			return pubx0, nil
+		} else {
+			err := fmt.Errorf("PUBX ID '%d' not implemented", id)
+			return nil, err
+		}
 	}
 
 	err := fmt.Errorf("Sentence type '%s' not implemented", sentence.Type)
